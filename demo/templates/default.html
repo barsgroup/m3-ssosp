@@ -1,0 +1,17 @@
+<html>
+<head><title>Django SAML 2.0 SP</title></head>
+<body>
+{% if not user.username %}
+I don't recognize you! Please login:<br />
+<a href="{% url login %}?next={% url default %}">Login</a>
+{% else %}
+Welcome, {{ user.username }}!<br />
+<ul>
+{% for name, value in attributes.items %}
+<li>{{ name }}: {{ value }}
+{% endfor %}
+</ul>
+<hr>
+<a href="{% url logout %}?next={% url default %}">Logout</a>
+{% endif %}
+</body>
