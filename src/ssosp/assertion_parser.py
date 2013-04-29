@@ -2,11 +2,7 @@
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-
-try:
-    from lxml import etree
-except ImportError:
-    from xml import etree
+from lxml import etree
 
 
 def _build_node(builder, struct, nsmap):
@@ -105,7 +101,7 @@ def get_session_from_response_assertion(assertion):
     statement = assertion.xpath('//saml2p:Response//saml2:Assertion//saml2:AuthnStatement',
                                 namespaces={'saml2p': 'urn:oasis:names:tc:SAML:2.0:protocol',
                                             'saml2': 'urn:oasis:names:tc:SAML:2.0:assertion'})
-    if len(statement) > 0:
+    if len(statement) > 0 and 'SessionIndex' in statement[0].attrib:
         session_id = statement[0].attrib['SessionIndex']
     return session_id
 
@@ -168,9 +164,10 @@ def get_user_from_assertion(assertion):
     Returns the user object that was created.
     """
     email = _get_email_from_assertion(assertion)
+    #TODO: подбор пользователя по реквизитам сделать настраиваемым
     try:
-        user = User.objects.get(email=email)
-    except:
+        user = User.objects.get(username=email)
+    except :
         # user = User.objects.create_user(
         #     _email_to_username(email),
         #     email,
@@ -180,8 +177,9 @@ def get_user_from_assertion(assertion):
 
     #NOTE: Login will fail if the user has changed his password via the local
     # account. This actually is a good thing, I think.
-    user = authenticate(username=user.username,
-                        password=settings.SECRET_KEY[::-1])
-    if user is None:
-        raise Exception('Unable to login user "%s" with SAML2SP_SAML_USER_PASSWORD' % email)
+    # user = authenticate(username=user.username,
+    #                     password=settings.SECRET_KEY[::-1])
+
+    # возьмем первый попавшийся бэкенд
+    user.backend = settings.AUTHENTICATION_BACKENDS[0]
     return user

@@ -16,7 +16,7 @@ from ssosp.utils import decode_base64_and_inflate, deflate_and_base64_encode, ge
 #     'idp': 'https://localhost:9443/samlsso',
 #     'issuer': 'saml2.demo',
 #     'index': '1537824998',
-#     'acs': 'http://127.0.0.1:9000/sso/acs/',
+#     'acs': '/sso/acs/',
 #     'session_map': 'ssosp.backends.db'
 # }
 
@@ -34,11 +34,11 @@ def get_session_map():
 
 class SAMLObject(object):
     def __init__(self, request):
-        config = settings.SSO_CONFIG or DEFAULT_SSO_CONFIG
-        self.idp_url = config.get('idp', '')
-        self.issuer = config.get('issuer', '')
-        self.service_index = config.get('index', '')
-        self.acs_url = config.get('acs', request.build_absolute_uri(reverse('acs')))
+        self.config = settings.SSO_CONFIG or DEFAULT_SSO_CONFIG
+        self.idp_url = self.config.get('idp', '')
+        self.issuer = self.config.get('issuer', '')
+        self.service_index = self.config.get('index', '')
+        self.acs_url = request.build_absolute_uri(self.config.get('acs', ''))
 
 
 class AuthResponse(SAMLObject):
@@ -51,11 +51,21 @@ class AuthResponse(SAMLObject):
         self.attributes = get_attributes_from_assertion(assertion)
 
     def doLogin(self, request, next_url):
-        login(request, self.user)
+        login_view = self.config.get('login', '')
+        if login_view:
+            login_module = '.'.join(login_view.split('.')[:-1])
+            login_method = login_view.split('.')[-1]
+            mod = import_module(login_module)
+            method = getattr(mod, login_method)
+            method(request, self.user)
+        else:
+            login(request, self.user)
+
         request.session['attributes'] = self.attributes
         # сохраним соответствие SSO-сессии и django-сессии
-        session_map = get_session_map()
-        session_map.set_session_map(self.session_id, request.session.session_key)
+        if self.session_id:
+            session_map = get_session_map()
+            session_map.set_session_map(self.session_id, request.session.session_key)
         return redirect(next_url)
 
 
@@ -69,7 +79,15 @@ class LogoutResponse(SAMLObject):
     def doLogout(self, request, next_url):
         session_map = get_session_map()
         session_key = request.session.session_key
-        logout(request)
+        logout_view = self.config.get('logout', '')
+        if logout_view:
+            logout_module = '.'.join(logout_view.split('.')[:-1])
+            logout_method = logout_view.split('.')[-1]
+            mod = import_module(logout_module)
+            method = getattr(mod, logout_method)
+            method(request)
+        else:
+            logout(request)
         session_map.delete_by_django_session(session_key)
         return redirect(next_url)
 
@@ -88,7 +106,6 @@ class AuthRequest(SAMLObject):
                 'IssueInstant': get_time_string(),
                 'ProtocolBinding': "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
                 'Version': "2.0",
-                'AttributeConsumingServiceIndex': self.service_index,
             },
             'nsmap': {'samlp': 'urn:oasis:names:tc:SAML:2.0:protocol',
                       'saml': 'urn:oasis:names:tc:SAML:2.0:assertion'},
@@ -108,6 +125,8 @@ class AuthRequest(SAMLObject):
                 }
             ],
         }
+        if self.service_index:
+            assertion_struct['attrs']['AttributeConsumingServiceIndex'] = self.service_index
         assertion = build_assertion(assertion_struct)
         req = get_str_from_assertion(assertion)
         return req
@@ -133,7 +152,15 @@ class LogoutRequest(SAMLObject):
             engine = import_module(settings.SESSION_ENGINE)
             session_key = session_map.get_django_session_key(self.session_id)
             request.session = engine.SessionStore(session_key)
-            logout(request)
+            logout_view = self.config.get('logout', '')
+            if logout_view:
+                logout_module = '.'.join(logout_view.split('.')[:-1])
+                logout_method = logout_view.split('.')[-1]
+                mod = import_module(logout_module)
+                method = getattr(mod, logout_method)
+                method(request)
+            else:
+                logout(request)
             session_map.delete_by_sso_session(self.session_id)
         else:
             # на нашли соответствующую сессию
@@ -176,7 +203,15 @@ class LogoutRequest(SAMLObject):
     def doLogout(self, request):
         session_map = get_session_map()
         session_key = request.session.session_key
-        logout(request)
+        logout_view = self.config.get('logout', '')
+        if logout_view:
+            logout_module = '.'.join(logout_view.split('.')[:-1])
+            logout_method = logout_view.split('.')[-1]
+            mod = import_module(logout_module)
+            method = getattr(mod, logout_method)
+            method(request)
+        else:
+            logout(request)
         session_map.delete_by_django_session(session_key)
 
 
