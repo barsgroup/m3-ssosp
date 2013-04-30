@@ -11,3 +11,6 @@ relre:log$
 relre:.orig$
 relre:~[0-9]+
 glob:.idea/*
+build/*
+dist/*
+src/ssosp.egg-info/*
