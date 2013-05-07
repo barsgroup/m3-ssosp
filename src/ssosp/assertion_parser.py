@@ -1,6 +1,4 @@
 #coding:utf-8
-from django.conf import settings
-from django.contrib.auth.models import User
 from lxml import etree
 from xmldsig import verify, XMLSigException
 import rsa
@@ -137,7 +135,7 @@ def get_attributes_from_assertion(assertion):
     return attributes
 
 
-def _get_email_from_assertion(assertion):
+def get_userid_from_assertion(assertion):
     """
     Returns the email out of the assertion.
 
@@ -152,38 +150,10 @@ def _get_email_from_assertion(assertion):
                                 namespaces={'saml2p': 'urn:oasis:names:tc:SAML:2.0:protocol',
                                             'saml2': 'urn:oasis:names:tc:SAML:2.0:assertion'})
     if len(statement) > 0:
-        email = statement[0].text
+        userid = statement[0].text
     else:
-        email = None
-    return email
-
-
-def get_user_from_assertion(assertion):
-    """
-    Gets info out of the assertion and locally logs in this user.
-    May create a local user account first.
-    Returns the user object that was created.
-    """
-    email = _get_email_from_assertion(assertion)
-    #TODO: подбор пользователя по реквизитам сделать настраиваемым
-    try:
-        user = User.objects.get(username=email)
-    except :
-        # user = User.objects.create_user(
-        #     _email_to_username(email),
-        #     email,
-        #     saml2sp_settings.SAML2SP_SAML_USER_PASSWORD
-        # )
-        return None
-
-    #NOTE: Login will fail if the user has changed his password via the local
-    # account. This actually is a good thing, I think.
-    # user = authenticate(username=user.username,
-    #                     password=settings.SECRET_KEY[::-1])
-
-    # возьмем первый попавшийся бэкенд
-    user.backend = settings.AUTHENTICATION_BACKENDS[0]
-    return user
+        userid = None
+    return userid
 
 
 def verify_assertion(assertion, public_key_str):

@@ -1,12 +1,13 @@
 #coding:utf-8
 import urllib2
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.auth import logout, login
 from django.shortcuts import redirect
 from django.utils.importlib import import_module
 from ssosp.assertion_parser import xml_to_assertion, is_logout_request, get_session_from_request_assertion, \
     build_assertion, assertion_to_xml, is_logout_response, get_session_from_response_assertion, \
-    get_user_from_assertion, get_attributes_from_assertion, verify_assertion
+    get_userid_from_assertion, get_attributes_from_assertion, verify_assertion
 from ssosp.utils import decode_base64_and_inflate, deflate_and_base64_encode, get_random_id, get_time_string
 
 
@@ -36,6 +37,16 @@ def get_session_map():
     return engine.SSOSessionMap()
 
 
+def get_method(method_str):
+    if method_str:
+        module = '.'.join(method_str.split('.')[:-1])
+        method = method_str.split('.')[-1]
+        mod = import_module(module)
+        return getattr(mod, method)
+    else:
+        return None
+
+
 class SAMLObject(object):
     def __init__(self, request):
         self.config = settings.SSO_CONFIG or DEFAULT_SSO_CONFIG
@@ -45,6 +56,9 @@ class SAMLObject(object):
         self.acs_url = request.build_absolute_uri(self.config.get('acs', ''))
         self.signing = self.config.get('signing', False)
         self.public_key_str = self.config.get('public_key', None)
+        self.logout_method = get_method(self.config.get('logout', None))
+        self.login_method = get_method(self.config.get('login', None))
+        self.get_user_method = get_method(self.config.get('get_user', None))
 
 
 class AuthResponse(SAMLObject):
@@ -53,19 +67,23 @@ class AuthResponse(SAMLObject):
 
     def fromAssertion(self, assertion):
         if self.signing and (not self.public_key_str or not verify_assertion(assertion, self.public_key_str)):
-            return SSOException("Response not valid")
+            raise SSOException("Response not valid")
         self.session_id = get_session_from_response_assertion(assertion)
-        self.user = get_user_from_assertion(assertion)
         self.attributes = get_attributes_from_assertion(assertion)
+        userid = get_userid_from_assertion(assertion)
+        if self.get_user_method:
+            self.user = self.get_user_method(userid, self.attributes)
+        else:
+            try:
+                self.user = User.objects.get(username=userid)
+                # возьмем первый попавшийся бэкенд
+                self.user.backend = settings.AUTHENTICATION_BACKENDS[0]
+            except User.DoesNotExist:
+                self.user = None
 
     def doLogin(self, request, next_url):
-        login_view = self.config.get('login', '')
-        if login_view:
-            login_module = '.'.join(login_view.split('.')[:-1])
-            login_method = login_view.split('.')[-1]
-            mod = import_module(login_module)
-            method = getattr(mod, login_method)
-            method(request, self.user)
+        if self.login_method:
+            self.login_method(request, self.user)
         else:
             login(request, self.user)
 
@@ -83,18 +101,13 @@ class LogoutResponse(SAMLObject):
 
     def fromAssertion(self, assertion):
         if self.signing and (not self.public_key_str or not verify_assertion(assertion, self.public_key_str)):
-            return SSOException("Response not valid")
+            raise SSOException("Response not valid")
 
     def doLogout(self, request, next_url):
         session_map = get_session_map()
         session_key = request.session.session_key
-        logout_view = self.config.get('logout', '')
-        if logout_view:
-            logout_module = '.'.join(logout_view.split('.')[:-1])
-            logout_method = logout_view.split('.')[-1]
-            mod = import_module(logout_module)
-            method = getattr(mod, logout_method)
-            method(request)
+        if self.logout_method:
+            self.logout_method(request)
         else:
             logout(request)
         session_map.delete_by_django_session(session_key)
@@ -153,7 +166,7 @@ class LogoutRequest(SAMLObject):
 
     def fromAssertion(self, assertion):
         if self.signing and (not self.public_key_str or not verify_assertion(assertion, self.public_key_str)):
-            return SSOException("Response not valid")
+            raise SSOException("Response not valid")
         self.session_id = get_session_from_request_assertion(assertion)
 
     def doLogoutBySession(self, request):
@@ -163,13 +176,8 @@ class LogoutRequest(SAMLObject):
             engine = import_module(settings.SESSION_ENGINE)
             session_key = session_map.get_django_session_key(self.session_id)
             request.session = engine.SessionStore(session_key)
-            logout_view = self.config.get('logout', '')
-            if logout_view:
-                logout_module = '.'.join(logout_view.split('.')[:-1])
-                logout_method = logout_view.split('.')[-1]
-                mod = import_module(logout_module)
-                method = getattr(mod, logout_method)
-                method(request)
+            if self.logout_method:
+                self.logout_method(request)
             else:
                 logout(request)
             session_map.delete_by_sso_session(self.session_id)
@@ -214,13 +222,8 @@ class LogoutRequest(SAMLObject):
     def doLogout(self, request):
         session_map = get_session_map()
         session_key = request.session.session_key
-        logout_view = self.config.get('logout', '')
-        if logout_view:
-            logout_module = '.'.join(logout_view.split('.')[:-1])
-            logout_method = logout_view.split('.')[-1]
-            mod = import_module(logout_module)
-            method = getattr(mod, logout_method)
-            method(request)
+        if self.logout_method:
+            self.logout_method(request)
         else:
             logout(request)
         session_map.delete_by_django_session(session_key)
