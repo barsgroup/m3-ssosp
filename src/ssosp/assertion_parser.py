@@ -1,8 +1,9 @@
 #coding:utf-8
 from django.conf import settings
-from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from lxml import etree
+from xmldsig import verify, XMLSigException
+import rsa
 
 
 def _build_node(builder, struct, nsmap):
@@ -183,3 +184,14 @@ def get_user_from_assertion(assertion):
     # возьмем первый попавшийся бэкенд
     user.backend = settings.AUTHENTICATION_BACKENDS[0]
     return user
+
+
+def verify_assertion(assertion, public_key_str):
+    public_key = rsa.key.PublicKey.load_pkcs1_openssl_pem(public_key_str)
+    try:
+        return verify(assertion.getroottree(), public_key)
+    except XMLSigException as err:
+        if err.message == "Is not signed xml!":
+            return True
+        else:
+            raise err

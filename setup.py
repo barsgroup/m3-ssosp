@@ -10,7 +10,7 @@ def read(fname):
         return ''
 
 setup(name='ssosp',
-      version='1.0.0',
+      version='1.1.0',
       url='https://src.bars-open.ru/py/m3/m3_contrib/ssosp',
       license='Apache License, Version 2.0',
       author='BARS Group',
