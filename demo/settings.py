@@ -79,7 +79,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
 
-ROOT_URLCONF = 'sptest.urls'
+ROOT_URLCONF = 'demo.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -104,5 +104,6 @@ SSO_CONFIG = {
     'issuer': 'saml2.demo',
     'index': '1537824998',
     'acs': 'http://127.0.0.1:9000/sso/acs/',
-    'session_map': 'ssosp.backends.cache'
+    'session_map': 'ssosp.backends.cache',
+    'get_user': 'demo.views.get_or_create_user',
 }
