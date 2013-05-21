@@ -9,8 +9,10 @@ relre:.old$
 relre:~$
 relre:log$
 relre:.orig$
+relre:.sqlite$
 relre:~[0-9]+
 glob:.idea/*
+glob:.env/*
 build/*
 dist/*
 src/ssosp.egg-info/*
