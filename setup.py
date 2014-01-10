@@ -11,8 +11,8 @@ def read(fname):
 
 setup(name='ssosp',
       version='1.1.0',
-      url='https://src.bars-open.ru/py/m3/m3_contrib/ssosp',
-      license='Apache License, Version 2.0',
+      url='https://bitbucket.org/barsgroup/ssosp',
+      license='MIT License',
       author='BARS Group',
       author_email='kirov@bars-open.ru',
       package_dir={'': 'src'},
