@@ -3,20 +3,36 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to ssosp's documentation!
-=================================
+SSOSP - Single Sign-On Service Provider
+=======================================
 
-Contents:
+SSO - `Технология единого входа`_ в комплекс приложений (`Single Sign-On`_)
+может реализовываться различными протоколами. Один из них - `SAML 2.0`_.
+
+За основу была взята реализация [1_] сервис провайдера для протокола SAML 2
+(которая в свою очередь является наследником другой реализации [2_]).
+
+
+.. _Технология единого входа: http://ru.wikipedia.org/wiki/%D0%A2%D0%B5%D1%85%D0%BD%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F_%D0%B5%D0%B4%D0%B8%D0%BD%D0%BE%D0%B3%D0%BE_%D0%B2%D1%85%D0%BE%D0%B4%D0%B0
+.. _Single Sign-On: http://en.wikipedia.org/wiki/Single_sign-on
+.. _SAML 2.0: https://docs.google.com/file/d/0Bye3Ej4MU20oWXdhZVdCWE54MDQ/view
+.. _1: https://github.com/easel/django-saml2-sp
+.. _2: https://code.google.com/p/django-saml2-sp/
+
+Содержание:
 
 .. toctree::
    :maxdepth: 2
 
+   overview
+   install
+   basic
 
 
-Indices and tables
-==================
+..  Дополнительно
+    -------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    * :ref:`genindex`
+    * :ref:`modindex`
+    * :ref:`search`
 
