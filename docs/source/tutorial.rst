@@ -1,39 +1,73 @@
 Демо проект
 ===========
 
+Быстренько напишем демонстрационный проект и проверим его работу.
 
-WSO2 Identity Server
---------------------
+Для проверки приложения возьмем, например, бесплатный *IdP*
+`WSO2 Identity Server`_.
 
-Для демо-приложения возьмем, например, бесплатный *IdP* WSO2 Identity Server.
-
-http://wso2.com/products/identity-server/
-
-1. Скачиваем дистрибутив https://svn.wso2.org/repos/wso2/people/dulanja/scratch/wso2is-4.6.0.zip
-
-2. Распаковываем wso2is-4.6.0.zip в папку wso2is-4.6.0
-
-3. Запускаем *WSO2IS* wso2is-4.6.0/bin/wso2server.sh (или *bat* для Windows)
-
-4. Заходим в *WSO2IS* https://localhost:9443/carbon/
-(пользователь *admin* пароль *admin*)
-
-5. Создадим нового пользователя.
-Идем Home > Configure > Users and Roles > Users > Add New User
-Создадим пользователя *demo* с паролем *demo123*.
-
-6. Зарегистрируем новый Service Provider.
-Идем Main > Manage > SAML SSO > Register New Service Provider
-Создадим поставщика услуг:
-Issuer: saml2.demo
-Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
+..  _`WSO2 Identity Server`: http://wso2.com/products/identity-server/
 
 
 
-Приложение
-----------
+Разворачиваем WSO2 Identity Server
+----------------------------------
 
-Подготавливаем виртуальное окружения для приложения:
+1.  Скачиваем дистрибутив
+    https://svn.wso2.org/repos/wso2/people/dulanja/scratch/wso2is-4.6.0.zip
+
+2.  Распаковываем wso2is-4.6.0.zip в папку wso2is-4.6.0
+
+3.  Запускаем *WSO2IS*
+
+    ::
+
+        /wso2is-4.6.0/bin/wso2server.sh (или *bat* для Windows)
+
+4.  Заходим в *WSO2IS* https://localhost:9443/carbon/
+    (пользователь *admin* пароль *admin*)
+
+5.  Создадим нового пользователя.
+
+    Идем Home > Configure > Users and Roles > Users > Add New User
+
+    Создадим пользователя *demo* с паролем *demo123*.
+
+
+6.  Добавим право входа для пользователя.
+
+    Идем Home > Configure > Users and Roles > Roles
+
+    Редактируем права (Permission) для роли *Internal/everyone*.
+
+..  figure:: _static/images/WSO2ISRoles.png
+    :align: center
+
+    Выставим право *Login*
+
+
+7.  Зарегистрируем новый Service Provider (который напишем чуть позже).
+
+    Идем Main > Manage > SAML SSO > Register New Service Provider
+
+    Создадим поставщика услуг:
+
+    ::
+
+        Issuer: saml2.demo
+
+        Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
+
+
+..  figure:: _static/images/WSO2ISAddSP.png
+    :align: center
+
+
+
+Пишем приложение
+----------------
+
+1.  Подготавливаем виртуальное окружения для приложения:
 
 ::
 
@@ -47,13 +81,15 @@ Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
 
     pip install lxml rsa xmldsig django ssosp -i http://pypi.bars-open.ru/simple
 
-Создаем проект:
+
+2.  Создаем проект:
+
 ::
 
     django-admin.py startproject demo
 
 
-В settings.py добавляем блок настройки SSO:
+3.  В settings.py добавляем блок настройки SSO:
 
 ::
 
@@ -67,7 +103,7 @@ Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
     }
 
 
-Также в INSTALLED_APPS добавляем наш модуль 'ssosp':
+    Также в INSTALLED_APPS добавляем наш модуль 'ssosp':
 
 ::
 
@@ -81,7 +117,7 @@ Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
         'ssosp',
     )
 
-Указываем какую-нибудь базу данных для проекта:
+    Указываем какую-нибудь базу данных для проекта:
 
 ::
 
@@ -92,7 +128,7 @@ Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
         }
     }
 
-И укажем где искать шаблоны приложения:
+    И укажем где искать шаблоны приложения:
 
 ::
 
@@ -104,9 +140,12 @@ Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
     )
 
 
-Создаем файл view.py, в котором будет функция отображения главной страницы
-(default) и метод поиска пользователя по переданным атрибутам
-(get_or_create_user).
+4.  Создаем файл view.py, в котором будет функция отображения главной страницы
+    (default) и метод поиска пользователя по переданным атрибутам
+    (get_or_create_user).
+
+    Функция *get_or_create_user* ищет пользователя по переданному от *IdP*
+    userid и если не находит, то создает нового пользователя.
 
 ::
 
@@ -138,7 +177,7 @@ Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
         return user
 
 
-В url.py добавляем ссылки на SSO и главную страницу:
+5.  В url.py добавляем ссылки на SSO и главную страницу:
 
 ::
 
@@ -150,7 +189,7 @@ Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
     )
 
 
-В папке 'templates' создаем файл шаблона главной страницы default.html :
+6.  В папке 'templates' создаем файл шаблона главной страницы default.html:
 
 ::
 
@@ -178,7 +217,8 @@ Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
     кавычках:
     {% url 'login' %}
 
-Создаем базу и запускаем пример:
+
+7.  Создаем базу и запускаем пример:
 
 ::
 
@@ -188,3 +228,44 @@ Assertion Consumer URL: http://127.0.0.1:8000/sso/acs/
 
     python manage.py runserver
 
+
+Проверяем
+---------
+
+Открываем страницу приложения http://127.0.0.1:8000
+
+.. figure:: _static/images/demo_default.png
+   :align: center
+
+и нажимаем на *Login* для входа в наше приложение.
+
+Произойдет редирект на адрес *IdP*, который мы указали в настройках
+https://localhost:9443/samlsso
+
+Так как мы еще не авторизованы, то *WSO2IS* запросит у нас имя пользователя
+и пароль.
+
+.. figure:: _static/images/WSO2ISAuth.png
+   :align: center
+
+После успешной аутентификации, *WSO2IS* редиректит нас обратно в наше
+приложение на адрес *ACS*, где приложение обрабатывает результаты
+аутентификации и пропускает нас в приложение.
+
+Это происходит достаточно быстро, поэтому можно не заметить как промелькнет
+эта страница:
+
+.. figure:: _static/images/WSO2ISLogin.png
+   :align: center
+
+Всё! Теперь наше приложение успешно пустило нас.
+
+.. figure:: _static/images/demo_login.png
+   :align: center
+
+После работы попробуем выйти из приложения нажав *Logout*
+
+.. figure:: _static/images/WSO2ISLogout.png
+   :align: center
+
+После серии редиректов мы возвращаемся к первоначальному состоянию.

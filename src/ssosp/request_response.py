@@ -8,7 +8,8 @@ from django.utils.importlib import import_module
 from ssosp.assertion_parser import xml_to_assertion, is_logout_request, get_session_from_request_assertion, \
     build_assertion, assertion_to_xml, is_logout_response, get_session_from_response_assertion, \
     get_userid_from_assertion, get_attributes_from_assertion, verify_assertion
-from ssosp.utils import decode_base64_and_inflate, deflate_and_base64_encode, get_random_id, get_time_string
+from ssosp.utils import decode_base64_and_inflate, deflate_and_base64_encode, get_random_id, get_time_string, \
+    decode_base64
 
 
 # Пример настроек в settings.py
@@ -23,6 +24,7 @@ from ssosp.utils import decode_base64_and_inflate, deflate_and_base64_encode, ge
 DEFAULT_SSO_CONFIG = {
     'session_map': 'ssosp.backends.db',
     'signing': False,
+    'zipped': False,
 }
 
 
@@ -230,7 +232,11 @@ class LogoutRequest(SAMLObject):
 
 
 def get_response_from_data(request, xml_string):
-    assertion_str = decode_base64_and_inflate(xml_string)
+    config = settings.SSO_CONFIG or DEFAULT_SSO_CONFIG
+    if config.get('zipping', False):
+        assertion_str = decode_base64_and_inflate(xml_string)
+    else:
+        assertion_str = decode_base64(xml_string)
     assertion = xml_to_assertion(assertion_str)
     if is_logout_response(assertion):
         response = LogoutResponse(request)
@@ -243,7 +249,11 @@ def get_response_from_data(request, xml_string):
 
 
 def get_request_from_data(request, xml_string):
-    assertion_str = decode_base64_and_inflate(xml_string)
+    config = settings.SSO_CONFIG or DEFAULT_SSO_CONFIG
+    if config.get('zipping', False):
+        assertion_str = decode_base64_and_inflate(xml_string)
+    else:
+        assertion_str = decode_base64(xml_string)
     assertion = xml_to_assertion(assertion_str)
     if is_logout_request(assertion):
         request = LogoutRequest(request)
