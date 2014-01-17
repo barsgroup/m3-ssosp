@@ -40,10 +40,10 @@
 
     Редактируем права (Permission) для роли *Internal/everyone*.
 
-..  figure:: _static/images/WSO2ISRoles.png
-    :align: center
+    ..  figure:: _static/images/WSO2ISRoles.png
+        :align: center
 
-    Выставим право *Login*
+        Выставим право *Login*
 
 
 7.  Зарегистрируем новый Service Provider (который напишем чуть позже).
@@ -96,14 +96,14 @@
     SSO_CONFIG = {
         'idp': 'https://localhost:9443/samlsso', # адрес Identity Provider
         'issuer': 'saml2.demo', # код связи между IdP и SP
-        'index': '1537824998', # индекс связи между IdP и SP
         'acs': 'http://127.0.0.1:8000/sso/acs/', # адрес сервиса ACS
         'session_map': 'ssosp.backends.cache', # бэкенд соответствия сессий
         'get_user': 'demo.views.get_or_create_user', # получение пользователя
     }
 
 
-    Также в INSTALLED_APPS добавляем наш модуль 'ssosp':
+
+Также в INSTALLED_APPS добавляем наш модуль 'ssosp':
 
 ::
 
@@ -114,10 +114,11 @@
         'django.contrib.sites',
         'django.contrib.messages',
         'django.contrib.staticfiles',
-        'ssosp',
+        **'ssosp',**
     )
 
-    Указываем какую-нибудь базу данных для проекта:
+
+Указываем какую-нибудь базу данных для проекта:
 
 ::
 
@@ -128,7 +129,8 @@
         }
     }
 
-    И укажем где искать шаблоны приложения:
+
+И укажем где искать шаблоны приложения:
 
 ::
 
@@ -156,13 +158,8 @@
 
 
     def default(request):
-        attributes = request.session.get('attributes', {})
         tv = {
             'user': request.user,
-            'session': request.session,
-            'idp_logout_url': None,
-            'idp_login_url': None,
-            'attributes': attributes,
         }
         return render_to_response('default.html', tv)
 
@@ -194,18 +191,13 @@
 ::
 
     <html>
-    <head><title>Django SSO SP</title></head>
+    <head><title>Django SAML 2.0 SP</title></head>
     <body>
     {% if not user.username %}
     I don't recognize you! Please login:<br />
     <a href="{% url login %}?next={% url default %}">Login</a>
     {% else %}
     Welcome, {{ user.username }}!<br />
-    <ul>
-    {% for name, value in attributes.items %}
-    <li>{{ name }}: {{ value }}
-    {% endfor %}
-    </ul>
     <hr>
     <a href="{% url logout %}?next={% url default %}">Logout</a>
     {% endif %}
@@ -263,7 +255,7 @@ https://localhost:9443/samlsso
 .. figure:: _static/images/demo_login.png
    :align: center
 
-После работы попробуем выйти из приложения нажав *Logout*
+Теперь выходим из приложения нажав *Logout*
 
 .. figure:: _static/images/WSO2ISLogout.png
    :align: center
