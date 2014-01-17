@@ -100,8 +100,51 @@
         :align: center
 
 
-Подписанные сообщения SAML
---------------------------
+Подписывание сообщений SAML
+---------------------------
+
+    ..  figure:: _static/images/WSO2ISSigning.png
+        :align: center
+
+
+    ..  figure:: _static/images/WSO2ISError.png
+        :align: center
+
+
+    ..  figure:: _static/images/WSO2ISSystemLog.png
+        :align: center
+
+
+Выгрузим сертификат из хранилища сертификатов *WSO2IS*
+
+::
+
+    keytool -importkeystore -srckeystore ./repository/resources/security/wso2carbon.jks -storepass wso2carbon -destkeystore wso2carbon.p12 -deststoretype PKCS12 -srcalias wso2carbon -srcstorepass wso2carbon
+
+
+Достанем из сертификата закрытый ключ. При выгрузке потребуется ввести
+пароль *wso2carbon*.
+
+::
+
+    openssl pkcs12 -in wso2carbon.p12 -nocerts -nodes | openssl rsa > privkey.pem
+
+
+Достанем также сертификат, чтобы получить из него публичный ключ.
+При выгрузке потребуется ввести пароль *wso2carbon*.
+
+::
+
+    openssl pkcs12 -in wso2carbon.p12 -clcerts -nokeys | openssl x509 -pubkey -noout > pubkey.pem
+
+
+
+Не работает пока :)
+
+
+Single Logout
+-------------
+
 
 
 Бэкенд соответствия сессий
