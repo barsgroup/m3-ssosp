@@ -26,6 +26,7 @@ SSO - `Технология единого входа`_ в комплекс пр
 
    overview
    install
+   tutorial
    basic
 
 
