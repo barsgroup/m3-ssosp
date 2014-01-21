@@ -114,7 +114,7 @@
         'django.contrib.sites',
         'django.contrib.messages',
         'django.contrib.staticfiles',
-        **'ssosp',**
+        'ssosp',
     )
 
 
@@ -139,6 +139,20 @@
 
     TEMPLATE_DIRS = (
         '%s/templates' % PROJECT_ROOT,
+    )
+
+
+В некоторых случаях может быть подключен *CsrfViewMiddleware* - для демо
+приложения его надо отключить.
+
+::
+
+    MIDDLEWARE_CLASSES = (
+        'django.middleware.common.CommonMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        #'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
     )
 
 
@@ -242,7 +256,7 @@ https://localhost:9443/samlsso
 
 После успешной аутентификации, *WSO2IS* редиректит нас обратно в наше
 приложение на адрес *ACS*, где приложение обрабатывает результаты
-аутентификации и пропускает нас в приложение.
+аутентификации и осуществляет вход.
 
 Это происходит достаточно быстро, поэтому можно не заметить как промелькнет
 эта страница:
@@ -250,14 +264,17 @@ https://localhost:9443/samlsso
 .. figure:: _static/images/WSO2ISLogin.png
    :align: center
 
+
 Всё! Теперь наше приложение успешно пустило нас.
 
 .. figure:: _static/images/demo_login.png
    :align: center
 
-Теперь выходим из приложения нажав *Logout*
+
+Теперь выходим из приложения нажав *Logout*.
 
 .. figure:: _static/images/WSO2ISLogout.png
    :align: center
+
 
 После серии редиректов мы возвращаемся к первоначальному состоянию.

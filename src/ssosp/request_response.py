@@ -165,6 +165,8 @@ class AuthRequest(SAMLObject):
 class LogoutRequest(SAMLObject):
     def __init__(self, request):
         super(LogoutRequest, self).__init__(request)
+        session_map = get_session_map()
+        self.session_id = session_map.get_sso_session_key(request.session.session_key)
 
     def fromAssertion(self, assertion):
         if self.signing and (not self.public_key_str or not verify_assertion(assertion, self.public_key_str)):
@@ -211,6 +213,11 @@ class LogoutRequest(SAMLObject):
                 },
             ],
         }
+        if self.session_id:
+            assertion_struct['value'].append({
+                'tag': '{samlp}SessionIndex',
+                'value': self.session_id,
+            })
         assertion = build_assertion(assertion_struct)
         req = get_str_from_assertion(assertion)
         return req
