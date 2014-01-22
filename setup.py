@@ -10,7 +10,7 @@ def read(fname):
         return ''
 
 setup(name='ssosp',
-      version='1.1.0',
+      version='1.1.1',
       url='https://bitbucket.org/barsgroup/ssosp',
       license='MIT License',
       author='BARS Group',
