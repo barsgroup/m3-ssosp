@@ -103,6 +103,8 @@
 Подписывание сообщений SAML
 ---------------------------
 
+Не работает пока :(
+
     ..  figure:: _static/images/WSO2ISSigning.png
         :align: center
 
