@@ -103,25 +103,36 @@
 Подписывание сообщений SAML
 ---------------------------
 
-Не работает пока :(
+В *IdP* сервере *WSO2IS* есть настройка, которой можно установить возможность
+использования цифровой подписи SAML-сообщений.
+
+Идем Main > Manage > SAML SSO
+
+Находим наше приложение *saml2.demo*, открываем и редактируем его.
 
     ..  figure:: _static/images/WSO2ISSigning.png
         :align: center
 
+*Enable Assertion Signing* - признак говорит о том, что исходящие от *IdP*
+сообщения будут **внутри** подписаны цифровой подписью формата XMLDSIG__.
+Наше приложение может проверять корректность этой подписи.
 
-    ..  figure:: _static/images/WSO2ISError.png
-        :align: center
+__ http://en.wikipedia.org/wiki/XML_Signature
 
+*Enable Signature Validation in Authentication Requests and Logout Requests* -
+признак говорит о том, что приходящие на *IdP* запросы на вход и выход, будут
+проверяться по сигнатуре SimpleSign__.
 
-    ..  figure:: _static/images/WSO2ISSystemLog.png
-        :align: center
+__ http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-binding-simplesign-cd-04.html
 
+*Certificate Alias* - наименование сертификата, через который будут проверяться
+входящие запросы. Для проверки поставим "wso2carbon".
 
-Выгрузим сертификат из хранилища сертификатов *WSO2IS*
+Теперь выгрузим этот сертификат из хранилища сертификатов *WSO2IS*
 
 ::
 
-    keytool -importkeystore -srckeystore ./repository/resources/security/wso2carbon.jks -storepass wso2carbon -destkeystore wso2carbon.p12 -deststoretype PKCS12 -srcalias wso2carbon -srcstorepass wso2carbon
+    keytool -importkeystore -srckeystore ~/wso2is-4.6.0/repository/resources/security/wso2carbon.jks -storepass wso2carbon -destkeystore wso2carbon.p12 -deststoretype PKCS12 -srcalias wso2carbon -srcstorepass wso2carbon
 
 
 Достанем из сертификата закрытый ключ. При выгрузке потребуется ввести
@@ -140,8 +151,43 @@
     openssl pkcs12 -in wso2carbon.p12 -clcerts -nokeys | openssl x509 -pubkey -noout > pubkey.pem
 
 
+Теперь для проверки работы с подписями добавим выгруженные ключи в настройки
+settings.py и укажем признаки необходимость подписи ('signing') и проверки
+подписи ('validate'):
 
-Не работает пока :)
+::
+
+    SSO_CONFIG = {
+
+    ....
+
+       'signing': True,
+       'validate': True,
+       'public_key': '''-----BEGIN PUBLIC KEY-----
+    MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCUp/oV1vWc8/TkQSiAvTousMzO
+    M4asB2iltr2QKozni5aVFu818MpOLZIr8LMnTzWllJvvaA5RAAdpbECb+48FjbBe
+    0hseUdN5HpwvnH/DW8ZccGvk53I6Orq7hLCv1ZHtuOCokghz/ATrhyPq+QktMfXn
+    RS4HrKGJTzxaCcU7OQIDAQAB
+    -----END PUBLIC KEY-----''',
+       'private_key': '''-----BEGIN RSA PRIVATE KEY-----
+    MIICXAIBAAKBgQCUp/oV1vWc8/TkQSiAvTousMzOM4asB2iltr2QKozni5aVFu81
+    8MpOLZIr8LMnTzWllJvvaA5RAAdpbECb+48FjbBe0hseUdN5HpwvnH/DW8ZccGvk
+    53I6Orq7hLCv1ZHtuOCokghz/ATrhyPq+QktMfXnRS4HrKGJTzxaCcU7OQIDAQAB
+    AoGAS/+ooju4a9po67zIGTEkqrQmsJC1HAPZo0bOmQK38LRzcps8Bmao9tjjbuVq
+    ogEj2xgjtHyNPSn3oBUA3v33usJ6YqwVrWsC6FwmZhq8Avsf94qm4hiTHe1AdxWm
+    ZGTs1eSYc6JnPIp0iVjHEfssIlGN+7LX1Q6kdbCf482dTnUCQQDvLwmtjlUASW84
+    zL5PEnNCorlcJ8qjGKlbcur2Lrn3vSCyX4cIWMxPNsCGvS2IO1Ctmz7yssnobhX6
+    iOaFOZVPAkEAnxuSwN4Kdw9Zku8cc7aifnJuEjzuEemM1cmwGSqilL0xUijVeeyq
+    fyy+1o7VFDa/nWPmmEZSqPNR6utcvLQU9wJAIycmpPtmQsSINDDjR3vOtNx1obW3
+    coENYwNgxQ3ZBzAkvhKMJg3m+T1yzlq/dmZBVUKb3c+pHSAQ2uGD/9CWwQJAVRy4
+    6ndc/ce2UQWcIMJINoAcJaF2cRqQfiTAERZfllWGtr6lQ+24XwOeqsQJdCC9bAJu
+    7nJf8YUIAzUYjNGAjQJBAKskkwcdhzvVcs7llm3+wWEzbMXzvNBmkZGRhDX6jtUI
+    J4U9RTHivqMeym4vp0mggaD4zc8qzG1NPDOp0p5AxBg=
+    -----END RSA PRIVATE KEY-----''',
+    }
+
+
+Приложение должно работать как прежде.
 
 
 SSO и Single Logout
