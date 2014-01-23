@@ -5,8 +5,11 @@ u"""
 """
 
 from lxml import etree
-#from xmldsig import verify, XMLSigException
-#import rsa
+import rsa
+try:
+    import xmldsig
+except ImportError:
+    xmldsig = None
 
 
 def _build_node(builder, struct, nsmap):
@@ -228,12 +231,30 @@ def verify_assertion(assertion, public_key_str):
     :rtype: bool
     :raise: XMLSigException - ошибка при проверке подписи
     """
-    # public_key = rsa.key.PublicKey.load_pkcs1_openssl_pem(public_key_str)
-    # try:
-    #     return verify(assertion.getroottree(), public_key)
-    # except XMLSigException as err:
-    #     if err.message == "Is not signed xml!":
-    #         return True
-    #     else:
-    #         raise err
-    return True
+    if not xmldsig is None:
+        public_key = rsa.key.PublicKey.load_pkcs1_openssl_pem(public_key_str)
+        try:
+            return xmldsig.verify(assertion.getroottree(), public_key)
+        except xmldsig.XMLSigException as err:
+            if err.message == "Is not signed xml!":
+                return True
+            else:
+                raise err
+    else:
+        raise ImportError("Cant import xmldsig module.")
+
+
+def sign_request(message, private_key_str):
+    u"""
+    Цифровая подпись SAML-сообщения. Получение сигнатуры по алгоритму SHA1
+
+    :param basestring message: Сообщение для подписи
+    :param basestring public_key_str: закрытый ключ для подписи представленный
+        в виде строки
+    :return: строка сигнатуры подписи закодированная в base64
+    :rtype: basestring
+    """
+    private_key = rsa.key.PrivateKey.load_pkcs1(private_key_str)
+    signed = rsa.pkcs1.sign(message, private_key, 'SHA-1')
+    signature = signed.encode('base64').replace('\n', '')
+    return signature

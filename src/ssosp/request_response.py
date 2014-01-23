@@ -11,7 +11,8 @@ from django.utils.importlib import import_module
 from ssosp.assertion_parser import xml_to_assertion, is_logout_request, \
     get_session_from_request_assertion, build_assertion, assertion_to_xml, \
     is_logout_response, get_session_from_response_assertion, \
-    get_userid_from_assertion, get_attributes_from_assertion, verify_assertion
+    get_userid_from_assertion, get_attributes_from_assertion, \
+    verify_assertion, sign_request
 from ssosp.utils import decode_base64_and_inflate, deflate_and_base64_encode, \
     get_random_id, get_time_string, decode_base64
 
@@ -30,6 +31,7 @@ from ssosp.utils import decode_base64_and_inflate, deflate_and_base64_encode, \
 DEFAULT_SSO_CONFIG = {
     'session_map': 'ssosp.backends.db',
     'signing': False,
+    'validate': False,
     'zipped': False,
 }
 
@@ -88,7 +90,9 @@ class SAMLObject(object):
         self.service_index = self.config.get('index', '')
         self.acs_url = request.build_absolute_uri(self.config.get('acs', ''))
         self.signing = self.config.get('signing', False)
+        self.validate = self.config.get('validate', False)
         self.public_key_str = self.config.get('public_key', None)
+        self.private_key_str = self.config.get('private_key', None)
         self.logout_method = get_method(self.config.get('logout', None))
         self.login_method = get_method(self.config.get('login', None))
         self.get_user_method = get_method(self.config.get('get_user', None))
@@ -109,9 +113,9 @@ class AuthResponse(SAMLObject):
         :param assertion: Утверждение, из которого надо получить данные
         :type assertion: etree.ElementTree
         """
-        if self.signing and (not self.public_key_str
-                             or not verify_assertion(assertion,
-                                                     self.public_key_str)):
+        if self.validate and (not self.public_key_str
+                              or not verify_assertion(assertion,
+                                                      self.public_key_str)):
             raise SSOException("Response not valid")
         self.session_id = get_session_from_response_assertion(assertion)
         self.attributes = get_attributes_from_assertion(assertion)
@@ -167,9 +171,9 @@ class LogoutResponse(SAMLObject):
         :param assertion: Утверждение, из которого надо получить данные
         :type assertion: etree.ElementTree
         """
-        if self.signing and (not self.public_key_str
-                             or not verify_assertion(assertion,
-                                                     self.public_key_str)):
+        if self.validate and (not self.public_key_str
+                              or not verify_assertion(assertion,
+                                                      self.public_key_str)):
             raise SSOException("Response not valid")
 
     def do_logout(self, request, next_url):
@@ -216,7 +220,7 @@ class AuthRequest(SAMLObject):
                 'ID': get_random_id(),
                 'IssueInstant': get_time_string(),
                 'ProtocolBinding':
-                    "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+                    "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
                 'Version': "2.0",
             },
             'nsmap': {'samlp': 'urn:oasis:names:tc:SAML:2.0:protocol',
@@ -254,9 +258,21 @@ class AuthRequest(SAMLObject):
         :rtype: django.http.HttpResponseRedirect
         """
         request_str = self.get_request()
-        login_url = '%s?SAMLRequest=%s&RelayState=%s' % (
-            self.idp_url, urllib2.quote(request_str), urllib2.quote(next_url)
-        )
+        if self.signing and self.private_key_str:
+            req = 'SAMLRequest=%s&RelayState=%s&SigAlg=%s' % (
+                urllib2.quote(request_str),
+                urllib2.quote(next_url),
+                urllib2.quote('http://www.w3.org/2000/09/xmldsig#rsa-sha1'),
+            )
+            signature = sign_request(req, self.private_key_str)
+            login_url = '%s?%s&Signature=%s' % (
+                self.idp_url, req,
+                urllib2.quote(signature),
+            )
+        else:
+            login_url = '%s?SAMLRequest=%s&RelayState=%s' % (
+                self.idp_url, urllib2.quote(request_str), urllib2.quote(next_url)
+            )
         return redirect(login_url)
 
 
@@ -267,7 +283,8 @@ class LogoutRequest(SAMLObject):
     def __init__(self, request):
         super(LogoutRequest, self).__init__(request)
         session_map = get_session_map()
-        self.session_id = session_map.get_sso_session_key(request.session.session_key)
+        self.session_id = session_map.get_sso_session_key(
+            request.session.session_key)
 
     def from_assertion(self, assertion):
         u"""
@@ -278,7 +295,9 @@ class LogoutRequest(SAMLObject):
         :param assertion: Утверждение, из которого надо получить данные
         :type assertion: etree.ElementTree
         """
-        if self.signing and (not self.public_key_str or not verify_assertion(assertion, self.public_key_str)):
+        if self.validate and (not self.public_key_str
+                              or not verify_assertion(assertion,
+                                                      self.public_key_str)):
             raise SSOException("Response not valid")
         self.session_id = get_session_from_request_assertion(assertion)
 
@@ -321,8 +340,9 @@ class LogoutRequest(SAMLObject):
             'attrs': {
                 'AssertionConsumerServiceURL': self.acs_url,
                 'ID': get_random_id(),
+                'Destination': self.idp_url,
                 'IssueInstant': get_time_string(),
-                'ProtocolBinding': "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+                'ProtocolBinding': "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
                 'Version': "2.0",
                 'AttributeConsumingServiceIndex': self.service_index,
             },
@@ -360,10 +380,22 @@ class LogoutRequest(SAMLObject):
         :rtype: django.http.HttpResponseRedirect
         """
         request_str = self.get_request(username)
-        logout_url = '%s?SAMLRequest=%s&RelayState=%s' % (
-            self.idp_url, urllib2.quote(request_str),
-            urllib2.quote(next_url)
-        )
+        if self.signing and self.private_key_str:
+            req = 'SAMLRequest=%s&RelayState=%s&SigAlg=%s' % (
+                urllib2.quote(request_str),
+                urllib2.quote(next_url),
+                urllib2.quote('http://www.w3.org/2000/09/xmldsig#rsa-sha1'),
+            )
+            signature = sign_request(req, self.private_key_str)
+            logout_url = '%s?%s&Signature=%s' % (
+                self.idp_url, req,
+                urllib2.quote(signature),
+            )
+        else:
+            logout_url = '%s?SAMLRequest=%s&RelayState=%s' % (
+                self.idp_url, urllib2.quote(request_str),
+                urllib2.quote(next_url)
+            )
         return redirect(logout_url)
 
     def do_logout(self, request):
@@ -425,6 +457,15 @@ def get_request_from_data(request, xml_string):
     config = settings.SSO_CONFIG or DEFAULT_SSO_CONFIG
     if config.get('zipping', False):
         assertion_str = decode_base64_and_inflate(xml_string)
+    else:
+        assertion_str = decode_base64(xml_string)
+    assertion = xml_to_assertion(assertion_str)
+    if is_logout_request(assertion):
+        request = LogoutRequest(request)
+        request.from_assertion(assertion)
+        return request
+    else:
+        return None
 
 
 def get_str_from_assertion(assertion):
