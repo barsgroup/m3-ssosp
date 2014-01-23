@@ -1,4 +1,14 @@
 #coding:utf-8
+u"""
+Регистрация обработчиков url-адресов для django.
+
+Регистрируются адреса:
+
+* acs - ssosp.views.sso_acs
+* login - ssosp.views.sso_login
+* logout - ssosp.views.sso_logout
+
+"""
 from django.conf.urls.defaults import patterns, url
 from ssosp.views import sso_acs, sso_login, sso_logout
 

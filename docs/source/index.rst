@@ -21,19 +21,19 @@ SSO - `Технология единого входа`_ в комплекс пр
 
 Содержание:
 
-.. toctree::
-   :maxdepth: 2
+..  toctree::
+    :maxdepth: 2
 
-   overview
-   install
-   tutorial
-   basic
+    overview
+    install
+    tutorial
+    basic
+    module
 
+Дополнительно
+-------------
 
-..  Дополнительно
-    -------------
-
-    * :ref:`genindex`
-    * :ref:`modindex`
-    * :ref:`search`
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 

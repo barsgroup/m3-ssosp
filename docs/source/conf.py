@@ -17,7 +17,7 @@ from datetime import datetime
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../../src'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -248,3 +248,11 @@ epub_title = project
 epub_author = company
 epub_publisher = company
 epub_copyright = u"2009-%s, %s" % (datetime.now().year, company)
+
+# setup Django
+# import django.conf.project_template.settings as settings
+# from django.core.management import setup_environ
+# setup_environ(settings)
+import django.conf
+if not django.conf.settings.configured:
+    django.conf.settings.configure(default_settings=django.conf.global_settings)

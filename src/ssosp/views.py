@@ -1,15 +1,25 @@
 #coding:utf-8
+u"""
+Обработчики адресов сервисов по-умолчанию
+"""
 from django.contrib.auth import get_user
 from django.http import HttpResponse
 
-from ssosp.request_response import get_request_from_data, LogoutRequest, AuthRequest, get_response_from_data, \
-    LogoutResponse
+from ssosp.request_response import get_request_from_data, LogoutRequest, \
+    AuthRequest, get_response_from_data, LogoutResponse
 
 
 def sso_acs(request):
     u"""
     Assertion Consumer Service
+
     Приемник ответов и запросов при взаимодействии для SSO посредством SAML 2.0
+
+    :param request: входящий запрос
+    :type request: django.http.HttpRequest
+    :return: ответ на запрос - обычно редирект на адрес SSO или адрес
+        переданный через POST-параметр "RelayState"
+    :rtype: django.http.HttpResponseRedirect | django.http.HttpResponse
     """
     result = None
     # получим параметры пришедшего запроса
@@ -21,7 +31,7 @@ def sso_acs(request):
         req = get_request_from_data(request, request_data)
         if isinstance(req, LogoutRequest):
             # если это запрос на выход
-            req.doLogoutBySession(request)
+            req.do_logout_by_session(request)
             result = HttpResponse()
         else:
             # неизвестный запрос
@@ -31,10 +41,10 @@ def sso_acs(request):
         resp = get_response_from_data(request, response_data)
         if isinstance(resp, LogoutResponse):
             # если это ответ на выход
-            result = resp.doLogout(request, next_url)
+            result = resp.do_logout(request, next_url)
         else:
             # значит это ответ на вход
-            result = resp.doLogin(request, next_url)
+            result = resp.do_login(request, next_url)
     else:
         # неизвестный запрос
         pass
@@ -43,23 +53,37 @@ def sso_acs(request):
 
 def sso_login(request, next_url=None):
     u"""
-    Подготовка запроса на Identity Provider для аутентификации
+    Подготовка запроса на Identity Provider для входа в систему
+
+    :param request: входящий запрос
+    :type request: django.http.HttpRequest
+    :param basestring next_url: следующий адрес после обработки
+    :return: ответ на запрос - обычно редирект на адрес SSO или адрес
+        переданный next_url
+    :rtype: django.http.HttpResponseRedirect
     """
     req = AuthRequest(request)
     if not next_url:
         next_url = request.GET.get('next', None)
-    result = req.getLogin(next_url)
+    result = req.get_login(next_url)
     return result
 
 
 def sso_logout(request, next_url=None):
     u"""
     Подготовка запроса на Identity Provider для выхода из системы
+
+    :param request: входящий запрос
+    :type request: django.http.HttpRequest
+    :param basestring next_url: следующий адрес после обработки
+    :return: ответ на запрос - обычно редирект на адрес SSO или адрес
+        переданный next_url
+    :rtype: django.http.HttpResponseRedirect
     """
     req = LogoutRequest(request)
     user = get_user(request)
     if not next_url:
         next_url = request.GET.get('next', None)
-    req.doLogout(request)
-    result = req.getLogout(user.username, next_url)
+    req.do_logout(request)
+    result = req.get_logout(user.username, next_url)
     return result

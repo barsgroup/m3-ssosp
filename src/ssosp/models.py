@@ -1,4 +1,8 @@
 #coding:utf-8
+u"""
+Модель хранения соответствия SSO-сессии и django-сессии
+"""
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
