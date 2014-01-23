@@ -9,7 +9,11 @@ u"""
 * logout - ssosp.views.sso_logout
 
 """
-from django.conf.urls.defaults import patterns, url
+import django
+if django.get_version() < '1.4':
+   from django.conf.urls.defaults import patterns, url
+else:
+   from django.conf.urls import patterns, url
 from ssosp.views import sso_acs, sso_login, sso_logout
 
 
