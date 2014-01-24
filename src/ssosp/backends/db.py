@@ -1,10 +1,16 @@
 #coding:utf-8
+u"""
+Бэкенд хранения соответствия сессий в базе данных
+"""
 from django.db import router, transaction, IntegrityError
 from ssosp.backends.base import BaseSSOSessionMap
 from ssosp.models import SSOSession
 
 
 class SSOSessionMap(BaseSSOSessionMap):
+    u"""
+    Бэкенд хранения соответствия сессий в базе данных
+    """
     def get_django_session_key(self, sso_session_key):
         try:
             s = SSOSession.objects.get(sso_session_key=sso_session_key)

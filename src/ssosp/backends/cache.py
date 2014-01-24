@@ -1,4 +1,7 @@
 #coding:utf-8
+u"""
+Кэш-бэкенд хранения соответствия сессий
+"""
 from ssosp.backends.base import BaseSSOSessionMap
 from django.core.cache import cache
 
@@ -8,6 +11,9 @@ DJANGO_KEY_PREFIX = "ssosessionmap.cache.django"
 
 
 class SSOSessionMap(BaseSSOSessionMap):
+    u"""
+    Кэш-бэкенд хранения соответствия сессий
+    """
     def __init__(self):
         self._cache = cache
         super(SSOSessionMap, self).__init__()

@@ -48,3 +48,21 @@ ssosp.views
 
 .. automodule:: ssosp.views
     :members:
+
+
+ssosp.backends
+----------------------
+
+
+.. automodule:: ssosp.backends.base
+    :members:
+
+
+.. autoclass:: ssosp.backends.cache.SSOSessionMap
+    :members:
+    :inherited-members:
+
+
+.. autoclass:: ssosp.backends.db.SSOSessionMap
+    :members:
+    :inherited-members:
