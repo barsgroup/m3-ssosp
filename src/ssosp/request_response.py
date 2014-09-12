@@ -13,6 +13,7 @@ from ssosp.assertion_parser import xml_to_assertion, is_logout_request, \
     is_logout_response, get_session_from_response_assertion, \
     get_userid_from_assertion, get_attributes_from_assertion, \
     verify_assertion, sign_request
+from ssosp.exceptions import SSOLoginException
 from ssosp.utils import decode_base64_and_inflate, deflate_and_base64_encode, \
     get_random_id, get_time_string, decode_base64
 
@@ -143,7 +144,10 @@ class AuthResponse(SAMLObject):
         :rtype: django.http.HttpResponseRedirect
         """
         if self.login_method:
-            self.login_method(request, self.user)
+            try:
+                self.login_method(request, self.user)
+            except SSOLoginException as ex:
+                return redirect(u'{}?msg={}'.format(ex.next_url, ex.message))
         else:
             login(request, self.user)
 
