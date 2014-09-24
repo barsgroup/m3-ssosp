@@ -9,10 +9,10 @@ def read(fname):
     except IOError:
         return ''
 
-setup(name='ssosp',
+setup(name='m3-ssosp',
       version='1.1.3',
       url='https://bitbucket.org/barsgroup/ssosp',
-      license='MIT License',
+      license='MIT',
       author='BARS Group',
       author_email='kirov@bars-open.ru',
       package_dir={'': 'src'},
@@ -27,5 +27,7 @@ setup(name='ssosp',
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'License :: OSI Approved :: MIT License',
+        'Development Status :: 5 - Production/Stable',
       ],
       )
