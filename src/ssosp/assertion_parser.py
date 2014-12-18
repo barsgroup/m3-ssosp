@@ -232,7 +232,9 @@ def verify_assertion(assertion, public_key_str):
     :raise: XMLSigException - ошибка при проверке подписи
     """
     if not xmldsig is None:
-        public_key = rsa.key.PublicKey.load_pkcs1_openssl_pem(public_key_str)
+        with file(public_key_str, 'r') as public_key_file:
+            public_key_data = public_key_file.read()
+        public_key = rsa.key.PublicKey.load_pkcs1_openssl_pem(public_key_data)
         try:
             return xmldsig.verify(assertion.getroottree(), public_key)
         except xmldsig.XMLSigException as err:
@@ -254,7 +256,9 @@ def sign_request(message, private_key_str):
     :return: строка сигнатуры подписи закодированная в base64
     :rtype: basestring
     """
-    private_key = rsa.key.PrivateKey.load_pkcs1(private_key_str)
+    with file(private_key_str, 'r') as private_key_file:
+        private_key_data = private_key_file.read()
+    private_key = rsa.key.PrivateKey.load_pkcs1(private_key_data)
     signed = rsa.pkcs1.sign(message, private_key, 'SHA-1')
     signature = signed.encode('base64').replace('\n', '')
     return signature
