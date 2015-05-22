@@ -16,6 +16,7 @@ class SSOSessionMap(BaseSSOSessionMap):
     """
     def __init__(self):
         self._cache = cache
+        self.timeout = 2592000  # 60*60*24*30, 30 days
         super(SSOSessionMap, self).__init__()
 
     def get_django_session_key(self, sso_session_key):
@@ -43,17 +44,19 @@ class SSOSessionMap(BaseSSOSessionMap):
     def set_session_map(self, sso_session_key, django_session_key):
         if self.exists_sso_session(sso_session_key):
             self.delete_by_sso_session(sso_session_key)
-        self._cache.add(SSO_KEY_PREFIX + sso_session_key, django_session_key)
-        self._cache.add(DJANGO_KEY_PREFIX + django_session_key, sso_session_key)
+        self._cache.add(SSO_KEY_PREFIX + sso_session_key, django_session_key,
+                        timeout=self.timeout)
+        self._cache.add(DJANGO_KEY_PREFIX + django_session_key, sso_session_key,
+                        timeout=self.timeout)
 
     def delete_by_sso_session(self, sso_session_key):
         django_session_key = self.get_django_session_key(sso_session_key)
         self._cache.delete(SSO_KEY_PREFIX + sso_session_key)
-        if not django_session_key is None:
+        if django_session_key is not None:
             self._cache.delete(DJANGO_KEY_PREFIX + django_session_key)
 
     def delete_by_django_session(self, django_session_key):
         sso_session_key = self.get_sso_session_key(django_session_key)
         self._cache.delete(DJANGO_KEY_PREFIX + django_session_key)
-        if not sso_session_key is None:
+        if sso_session_key is not None:
             self._cache.delete(SSO_KEY_PREFIX + sso_session_key)
