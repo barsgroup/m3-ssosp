@@ -15,7 +15,7 @@ from django.conf import settings
 # }
 
 
-# Словарь конфигурации модуля по-умолчанию
+# Словарь конфигурации модуля по умолчанию
 DEFAULT_SSO_CONFIG = {
     'idp': '',
     'issuer': '',

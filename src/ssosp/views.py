@@ -1,6 +1,6 @@
 #coding:utf-8
 u"""
-Обработчики адресов сервисов по-умолчанию
+Обработчики адресов сервисов по умолчанию
 """
 from django.contrib.auth import get_user
 from django.http import HttpResponse
