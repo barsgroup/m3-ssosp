@@ -109,7 +109,7 @@ https://bitbucket.org/barsgroup/ssosp/downloads
     Значение по умолчанию: 'ssosp.backends.db'.
 
 * cache_timeout - длительность хранения сессий в кэше django в случае использования
-    'ssosp.backends.cache'. Значение по умолчанию:
+    'ssosp.backends.cache'. Значение по умолчанию: 2592000 (30 дней).
 
 * get_user - путь к функции поиска пользователя в приложении, по переданным
     данным из *IdP* (передаются userid и список claims). На выходе функции
