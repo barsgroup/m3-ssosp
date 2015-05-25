@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import logout, login
 from django.shortcuts import redirect
 from django.utils.importlib import import_module
+from ssosp.settings import get_sso_setting
 from ssosp.assertion_parser import xml_to_assertion, is_logout_request, \
     get_session_from_request_assertion, build_assertion, assertion_to_xml, \
     is_logout_response, get_session_from_response_assertion, \
@@ -16,25 +17,6 @@ from ssosp.assertion_parser import xml_to_assertion, is_logout_request, \
 from ssosp.exceptions import SSOLoginException
 from ssosp.utils import decode_base64_and_inflate, deflate_and_base64_encode, \
     get_random_id, get_time_string, decode_base64
-
-
-# Пример настроек в settings.py
-# SSO_CONFIG = {
-#     'idp': 'https://localhost:9443/samlsso',
-#     'issuer': 'saml2.demo',
-#     'index': '1537824998',
-#     'acs': '/sso/acs/',
-#     'session_map': 'ssosp.backends.db'
-# }
-
-
-# Словарь конфигурации модуля по-умолчанию
-DEFAULT_SSO_CONFIG = {
-    'session_map': 'ssosp.backends.db',
-    'signing': False,
-    'validate': False,
-    'zipped': False,
-}
 
 
 class SSOException(Exception):
@@ -52,8 +34,7 @@ def get_session_map():
     :return: Экземпляр бэкенда, наследника BaseSSOSessionMap
     :rtype: ssosp.backends.base.BaseSSOSessionMap
     """
-    config = settings.SSO_CONFIG or DEFAULT_SSO_CONFIG
-    session_map_engine = config.get('session_map', None)
+    session_map_engine = get_sso_setting('session_map')
     engine = import_module(session_map_engine)
     return engine.SSOSessionMap()
 
@@ -85,18 +66,17 @@ class SAMLObject(object):
         :param request: запрос, в рамках которого создан объект
         :type request: django.http.HttpRequest
         """
-        self.config = settings.SSO_CONFIG or DEFAULT_SSO_CONFIG
-        self.idp_url = self.config.get('idp', '')
-        self.issuer = self.config.get('issuer', '')
-        self.service_index = self.config.get('index', '')
-        self.acs_url = request.build_absolute_uri(self.config.get('acs', ''))
-        self.signing = self.config.get('signing', False)
-        self.validate = self.config.get('validate', False)
-        self.public_key_str = self.config.get('public_key', None)
-        self.private_key_str = self.config.get('private_key', None)
-        self.logout_method = get_method(self.config.get('logout', None))
-        self.login_method = get_method(self.config.get('login', None))
-        self.get_user_method = get_method(self.config.get('get_user', None))
+        self.idp_url = get_sso_setting('idp')
+        self.issuer = get_sso_setting('issuer')
+        self.service_index = get_sso_setting('index')
+        self.acs_url = request.build_absolute_uri(get_sso_setting('acs'))
+        self.signing = get_sso_setting('signing')
+        self.validate = get_sso_setting('validate')
+        self.public_key_str = get_sso_setting('public_key')
+        self.private_key_str = get_sso_setting('private_key')
+        self.logout_method = get_method(get_sso_setting('logout'))
+        self.login_method = get_method(get_sso_setting('login'))
+        self.get_user_method = get_method(get_sso_setting('get_user'))
 
 
 class AuthResponse(SAMLObject):
@@ -430,8 +410,7 @@ def get_response_from_data(request, xml_string):
     :return: объект Response, преобразованный из xml-строки
     :rtype: либо LogoutResponse, либо AuthResponse
     """
-    config = settings.SSO_CONFIG or DEFAULT_SSO_CONFIG
-    if config.get('zipping', False):
+    if get_sso_setting('zipped'):
         assertion_str = decode_base64_and_inflate(xml_string)
     else:
         assertion_str = decode_base64(xml_string)
@@ -458,8 +437,7 @@ def get_request_from_data(request, xml_string):
     :return: объект Request, преобразованный из xml-строки
     :rtype: LogoutRequest | None
     """
-    config = settings.SSO_CONFIG or DEFAULT_SSO_CONFIG
-    if config.get('zipping', False):
+    if get_sso_setting('zipped'):
         assertion_str = decode_base64_and_inflate(xml_string)
     else:
         assertion_str = decode_base64(xml_string)

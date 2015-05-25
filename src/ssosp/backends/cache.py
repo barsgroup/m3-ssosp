@@ -2,8 +2,9 @@
 u"""
 Кэш-бэкенд хранения соответствия сессий
 """
-from ssosp.backends.base import BaseSSOSessionMap
 from django.core.cache import cache
+from ssosp.backends.base import BaseSSOSessionMap
+from ssosp.settings import get_sso_setting
 
 
 SSO_KEY_PREFIX = "ssosessionmap.cache.sso"
@@ -16,7 +17,7 @@ class SSOSessionMap(BaseSSOSessionMap):
     """
     def __init__(self):
         self._cache = cache
-        self._timeout = 2592000  # 60*60*24*30, 30 days
+        self._timeout = int(get_sso_setting('cache_timeout'))
         super(SSOSessionMap, self).__init__()
 
     def get_django_session_key(self, sso_session_key):
