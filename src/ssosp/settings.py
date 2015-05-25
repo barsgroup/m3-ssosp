@@ -36,4 +36,8 @@ def get_sso_setting(key):
     :param basestring key: настройка
     :return: значение настройки
     """
-    return settings.SSO_CONFIG.get(key) or DEFAULT_SSO_CONFIG.get(key) or None
+    if key in settings.SSO_CONFIG:
+        return settings.SSO_CONFIG.get(key)
+    if key in DEFAULT_SSO_CONFIG:
+        return DEFAULT_SSO_CONFIG.get(key)
+    return None
