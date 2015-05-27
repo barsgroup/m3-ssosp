@@ -1,0 +1,21 @@
+script: true
+deploy: 
+  provider: pypi
+  on: 
+    tags: true
+    all_branches: true
+  distributions: sdist
+  user: bars-travis
+  password: 
+    secure: IsMJp1mS7uBlzTnE1LtRZbLplhDrJ7iAq9HODhUIuGqjcUEXYvH7axIuV7O0et0nPUr7v63HiDVwhFmn2jtnU82FJtrzDQVLX1KvAqHxoxBmm0WgoTftRAzognOKEvEUpqfMs5/YXpDCCjSL1FXKAt4veEYET7fI19HcspncPBN6Q9f6Cwv7ijRYasTVe4ADyGP8Zk6m8SGxWlHQcNhYBU4PQpmi8E/UPC6m4g6mje09n1C4cX/9epOnf0SRMRmKhtZadpRv6WqDLP665J3Y80UzLZPEEHFKvg1fySO96ennbTixZCBGntrg5PnMq3FLgjbKF7R7POr0ySV6378rg4RQBBr2G0fdgOLOojLsxdy33sKmjEoMgTyEQ8FwBP694BGUFIZYspSqcyBOcE6wGujGGPEigdOVZP0tQAI72ahhwL1sca9OYLto0KpRuo2kIgxjodMhL3H+42r4OA91Ws4uhzKE5zuBTpwy8FCuxqi43SueD2lvanTg0Cbsy+nuygH2kBNfA3YtKnVO7epcnw5UptD8ze1hzR0557nGZEfO1VvIJJ504d0wmUaJeWBKcepfpvP7tISjas7y3f6luq5J7ALw/EyXEp9J032vZCi83pHWwZB4gJgqbXWZ9BnR+aMm3TNnBFKeRbabImfgXkzaXbGt+VSlhWMi2Rah3ow=
+python: 
+- "2.7"
+install: true
+language: python
+notifications: 
+  hipchat: 
+    rooms: 
+    - b7098c17bc3283dc7ca388b68e3ca3@m3
+    template: 
+    - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+    format: html
