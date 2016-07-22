@@ -1,22 +1,28 @@
-#coding:utf-8
+# coding:utf-8
 u"""
 Классы SAML-запросов и ответов
 """
 import urllib2
+from importlib import import_module
+
 from django.conf import settings
-from django.contrib.auth.models import User
-from django.contrib.auth import logout, login
+from django.contrib.auth import login, logout
 from django.shortcuts import redirect
-from django.utils.importlib import import_module
-from ssosp.settings import get_sso_setting
-from ssosp.assertion_parser import xml_to_assertion, is_logout_request, \
-    get_session_from_request_assertion, build_assertion, assertion_to_xml, \
-    is_logout_response, get_session_from_response_assertion, \
-    get_userid_from_assertion, get_attributes_from_assertion, \
-    verify_assertion, sign_request
+from m3_django_compat import get_user_model
+
+from ssosp.assertion_parser import (assertion_to_xml, build_assertion,
+                                    get_attributes_from_assertion,
+                                    get_session_from_request_assertion,
+                                    get_session_from_response_assertion,
+                                    get_userid_from_assertion,
+                                    is_logout_request, is_logout_response,
+                                    sign_request, verify_assertion,
+                                    xml_to_assertion)
 from ssosp.exceptions import SSOLoginException
-from ssosp.utils import decode_base64_and_inflate, deflate_and_base64_encode, \
-    get_random_id, get_time_string, decode_base64
+from ssosp.settings import get_sso_setting
+from ssosp.utils import (decode_base64, decode_base64_and_inflate,
+                         deflate_and_base64_encode, get_random_id,
+                         get_time_string)
 
 
 class SSOException(Exception):
@@ -104,6 +110,7 @@ class AuthResponse(SAMLObject):
         if self.get_user_method:
             self.user = self.get_user_method(userid, self.attributes)
         else:
+            User = get_user_model()
             try:
                 self.user = User.objects.get(username=userid)
                 # возьмем первый попавшийся бэкенд
