@@ -1,0 +1,7 @@
+*.pyc
+sinops/sinops.egg-info/*
+sinops.egg-info/*
+dist/*
+build/*
+.coverage
+htmlcov/*

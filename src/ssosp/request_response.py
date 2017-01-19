@@ -3,11 +3,11 @@ u"""
 Классы SAML-запросов и ответов
 """
 import urllib2
+from importlib import import_module
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth import logout, login
 from django.shortcuts import redirect
-from django.utils.importlib import import_module
 from ssosp.settings import get_sso_setting
 from ssosp.assertion_parser import xml_to_assertion, is_logout_request, \
     get_session_from_request_assertion, build_assertion, assertion_to_xml, \
