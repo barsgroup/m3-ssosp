@@ -22,7 +22,6 @@ def _read(fname):
 
 setup(
     name='m3-ssosp',
-    version='1.1.5',
     url='https://bitbucket.org/barsgroup/ssosp',
     license='MIT',
     author='BARS Group',
