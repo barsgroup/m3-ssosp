@@ -2,6 +2,7 @@
 u"""
 Бэкенд хранения соответствия сессий в базе данных
 """
+from __future__ import absolute_import
 from django.db import router, transaction, IntegrityError
 from ssosp.backends.base import BaseSSOSessionMap
 from ssosp.models import SSOSession
