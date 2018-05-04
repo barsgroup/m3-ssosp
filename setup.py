@@ -2,21 +2,7 @@
 
 from __future__ import absolute_import
 import os
-
-try:  # pip version >= 10.0
-    from pip._internal.req import parse_requirements
-    from pip._internal.download import PipSession
-except ImportError:  # pip version < 10.0
-    from pip.req import parse_requirements
-    from pip.download import PipSession
 from setuptools import setup, find_packages
-
-
-def _get_requirements(file_name):
-    pip_session = PipSession()
-    requirements = parse_requirements(file_name, session=pip_session)
-
-    return tuple(str(requirement.req) for requirement in requirements)
 
 
 def _read(fname):
@@ -24,6 +10,7 @@ def _read(fname):
         return open(os.path.join(os.path.dirname(__file__), fname)).read()
     except IOError:
         return ''
+
 
 setup(
     name='m3-ssosp',
@@ -34,7 +21,13 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     description=_read('DESCRIPTION.md'),
-    install_requires=_get_requirements('REQUIREMENTS'),
+    install_requires=(
+        'six>=1.10.0',
+        'lxml>=3.0',
+        'rsa>=3.1.2',
+        'django>=1.3',
+        'm3-django-compat>=1.2.1',
+    ),
     long_description=_read('README.md'),
     include_package_data=True,
     classifiers=(
