@@ -26,7 +26,8 @@ setup(
         'lxml>=3.0',
         'rsa>=3.1.2',
         'django>=1.3',
-        'm3-django-compat>=1.2.1',
+        'm3-builder>=1.2.0',
+        'm3-django-compat>=1.5.1',
     ),
     long_description=_read('README.md'),
     include_package_data=True,
@@ -41,6 +42,6 @@ setup(
         'Development Status :: 5 - Production/Stable',
     ),
     dependency_links=('http://pypi.bars-open.ru/simple/m3-builder',),
-    setup_requires=('m3-builder>=1.0.1',),
+        setup_requires=('m3-builder>=1.0.1',),
     set_build_info=os.path.dirname(__file__),
 )
