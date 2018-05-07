@@ -4,8 +4,10 @@ u"""
 с использованием lxml.etree
 """
 
+from __future__ import absolute_import
 from lxml import etree
 import rsa
+import six
 try:
     import xmldsig
 except ImportError:
@@ -24,8 +26,8 @@ def _build_node(builder, struct, nsmap):
     """
     assert isinstance(builder, etree.TreeBuilder)
     assert isinstance(nsmap, dict)
-    assert isinstance(struct, (basestring, dict, list, tuple))
-    if isinstance(struct, basestring):
+    assert isinstance(struct, (six.string_types, dict, list, tuple))
+    if isinstance(struct, six.string_types):
         builder.data(struct)
     else:
         if isinstance(struct, dict):
@@ -40,7 +42,7 @@ def _build_node(builder, struct, nsmap):
                 if current_nsmap:
                     nsmap.update(current_nsmap)
                 # заменим неймспейс в тэге
-                for key, value in nsmap.iteritems():
+                for key, value in six.iteritems(nsmap):
                     if tag.startswith('{%s}' % key):
                         tag = tag.replace('{%s}' % key, '{%s}' % value)
                         break
@@ -232,7 +234,7 @@ def verify_assertion(assertion, public_key_str):
     :raise: XMLSigException - ошибка при проверке подписи
     """
     if not xmldsig is None:
-        with file(public_key_str, 'r') as public_key_file:
+        with open(public_key_str, 'r') as public_key_file:
             public_key_data = public_key_file.read()
         public_key = rsa.key.PublicKey.load_pkcs1_openssl_pem(public_key_data)
         try:
@@ -256,7 +258,7 @@ def sign_request(message, private_key_str):
     :return: строка сигнатуры подписи закодированная в base64
     :rtype: basestring
     """
-    with file(private_key_str, 'r') as private_key_file:
+    with open(private_key_str, 'r') as private_key_file:
         private_key_data = private_key_file.read()
     private_key = rsa.key.PrivateKey.load_pkcs1(private_key_data)
     signed = rsa.pkcs1.sign(message, private_key, 'SHA-1')

@@ -2,6 +2,7 @@
 u"""
 Кэш-бэкенд хранения соответствия сессий
 """
+from __future__ import absolute_import
 from django.core.cache import cache
 from ssosp.backends.base import BaseSSOSessionMap
 from ssosp.settings import get_sso_setting

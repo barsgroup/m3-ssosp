@@ -5,6 +5,7 @@ u"""
 Часть утилит взята отсюда:
 http://stackoverflow.com/questions/1089662/python-inflate-and-deflate-implementations
 """
+from __future__ import absolute_import
 import zlib
 import base64
 import time

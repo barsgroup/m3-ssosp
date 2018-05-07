@@ -2,7 +2,8 @@
 u"""
 Классы SAML-запросов и ответов
 """
-import urllib2
+from __future__ import absolute_import
+from six.moves.urllib.parse import quote
 from importlib import import_module
 
 from django.conf import settings
@@ -251,18 +252,18 @@ class AuthRequest(SAMLObject):
         request_str = self.get_request()
         if self.signing and self.private_key_str:
             req = 'SAMLRequest=%s&RelayState=%s&SigAlg=%s' % (
-                urllib2.quote(request_str),
-                urllib2.quote(next_url),
-                urllib2.quote('http://www.w3.org/2000/09/xmldsig#rsa-sha1'),
+                quote(request_str),
+                quote(next_url),
+                quote('http://www.w3.org/2000/09/xmldsig#rsa-sha1'),
             )
             signature = sign_request(req, self.private_key_str)
             login_url = '%s?%s&Signature=%s' % (
                 self.idp_url, req,
-                urllib2.quote(signature),
+                quote(signature),
             )
         else:
             login_url = '%s?SAMLRequest=%s&RelayState=%s' % (
-                self.idp_url, urllib2.quote(request_str), urllib2.quote(next_url)
+                self.idp_url, quote(request_str), quote(next_url)
             )
         return redirect(login_url)
 
@@ -333,7 +334,8 @@ class LogoutRequest(SAMLObject):
                 'ID': get_random_id(),
                 'Destination': self.idp_url,
                 'IssueInstant': get_time_string(),
-                'ProtocolBinding': "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                'ProtocolBinding':
+                    "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
                 'Version': "2.0",
                 'AttributeConsumingServiceIndex': self.service_index,
             },
@@ -373,19 +375,19 @@ class LogoutRequest(SAMLObject):
         request_str = self.get_request(username)
         if self.signing and self.private_key_str:
             req = 'SAMLRequest=%s&RelayState=%s&SigAlg=%s' % (
-                urllib2.quote(request_str),
-                urllib2.quote(next_url),
-                urllib2.quote('http://www.w3.org/2000/09/xmldsig#rsa-sha1'),
+                quote(request_str),
+                quote(next_url),
+                quote('http://www.w3.org/2000/09/xmldsig#rsa-sha1'),
             )
             signature = sign_request(req, self.private_key_str)
             logout_url = '%s?%s&Signature=%s' % (
                 self.idp_url, req,
-                urllib2.quote(signature),
+                quote(signature),
             )
         else:
             logout_url = '%s?SAMLRequest=%s&RelayState=%s' % (
-                self.idp_url, urllib2.quote(request_str),
-                urllib2.quote(next_url)
+                self.idp_url, quote(request_str),
+                quote(next_url)
             )
         return redirect(logout_url)
 

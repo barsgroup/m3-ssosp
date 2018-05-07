@@ -9,6 +9,7 @@ u"""
 * logout - ssosp.views.sso_logout
 
 """
+from __future__ import absolute_import
 import django
 if django.get_version() < '1.4':
    from django.conf.urls.defaults import patterns, url
